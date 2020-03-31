@@ -1,0 +1,21 @@
+[mongodb]
+host = MONGODB_IP_ADDRESS
+port = MONGODB_PORT
+database = MONGODB_DATABASE
+collection = MONGODB_COLLECTION
+
+[cryptowatch]
+# Create API key for your Cryptowat.ch account
+api = CRYPTOWATCH_API_KEY
+
+# Cryptowat.ch market IDs can be found at link below:
+# https://docs.google.com/spreadsheets/d/1Xw1BMQR2e-kWyWApq2Y-w8ddwecH8w_c_JwfY_Pv2o0/edit
+# Put market IDs in comma-separated list (ex. market_ids = 247,4961,579,65,68)
+#
+# Some Example Market IDs:
+# BMEX-XBTUSD-Perp: 247
+# BMEX-ETHUSD-Perp: 4961
+# BINA-BTCUSDT: 579
+# CBPR-BTCUSD: 65
+# CBPR-ETHUSD: 68
+market_ids = LIST_OF_MARKET_IDS
