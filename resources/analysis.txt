@@ -1,0 +1,6 @@
+Post-hoc addition to MongoDB documents:
+
+1) TestExchanges - TradeExchange
+    -> Analyze magnitude of difference vs. price changes
+
+2) Volume stuff

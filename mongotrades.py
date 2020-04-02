@@ -1,10 +1,14 @@
 import asyncio
 import configparser
+#from decimal import Decimal
+from bson.decimal128 import Decimal128 as Decimal
 import functools
-import json
+#import json
+import simplejson as json
 import logging
 from pprint import pprint
 import signal
+import sys
 
 from pymongo import MongoClient
 
@@ -31,17 +35,34 @@ def build_subscription(market_list):
     return constructed_message
 
 
+def format_message(message):
+    if 'marketUpdate' in message:
+        for item in message['marketUpdate']['market']:
+            message['marketUpdate']['market'][item] = int(
+                message['marketUpdate']['market'][item])
+        
+        trades_converted = []
+        for trade in message['marketUpdate']['tradesUpdate']['trades']:
+            trade_reformatted = dict(
+                amount=Decimal(trade['amountStr']),
+                # externalId=trade['externalId'],
+                orderSide=trade['orderSide'],
+                price=Decimal(trade['priceStr']),
+                timestamp=int(trade['timestamp']),
+                timestampNano=int(trade['timestampNano'])
+            )
+            trades_converted.append(trade_reformatted)
+        
+        message['marketUpdate']['tradesUpdate']['trades'] = trades_converted
+    
+    pprint(message)
+
+    return message
+
+
 def signal_exit(signame, loop):
     print("Got signal %s: exit" % signame)
     loop.stop()
-
-
-#def log_message(message: str) -> None:
-#    logging.info(f"Message: {message}")
-
-
-#def save_mongodb(trade_collection: pymongo.collection.Collection, message: str) -> None:
-#    pass
 
 
 ## AsyncIO Functions ##
@@ -53,12 +74,9 @@ async def consumer_handler(websocket: WebSocketClientProtocol) -> None:
         config['mongodb']['database']][config['mongodb']['collection']]
     
     async for message in websocket:
-        # log_message(message)
-
-        message_json = json.loads(message)
+        message_json = format_message(json.loads(message))
         # pprint(message_json)
 
-        # save_mongodb(trade_collection, message_json)
         doc_id = trade_collection.insert_one(message_json).inserted_id
         logger.debug('doc_id: {}'.format(doc_id))
 
