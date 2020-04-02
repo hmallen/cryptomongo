@@ -1,6 +1,6 @@
 # CryptoMongo
 
-Dump trade data from Cryptowat.ch websockets into MongoDB via PyMongo. Rough and quickly assembled for use with another project with real-time trade flow analysis at the core.
+Dump trade data from Cryptowat.ch websockets into MongoDB via PyMongo. Rough and quickly assembled for use with another project with real-time trade flow analysis at its core.
 
 From MongoDB, chart with the new Mongo charting tools, create some plots with Plot.ly, matplotlib, etc. Perhaps some technical analysis with TA-Lib? Wanna get fancy with an Elastic Stack? The world...er, database...is your oyster!
 
