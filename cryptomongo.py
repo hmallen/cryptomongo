@@ -19,7 +19,7 @@ config_path = 'config/settings.conf'
 config = configparser.ConfigParser()
 config.read(config_path)
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -55,14 +55,17 @@ def format_message(message):
         
         message['marketUpdate']['tradesUpdate']['trades'] = trades_converted
     
-    pprint(message)
+    # pprint(message)
 
     return message
 
 
 def signal_exit(signame, loop):
     print("Got signal %s: exit" % signame)
-    loop.stop()
+
+    logger.debug('Received exit signal. Cancelling tasks.')
+    for task in asyncio.Task.all_tasks():
+        task.cancel()
 
 
 ## AsyncIO Functions ##
@@ -74,11 +77,15 @@ async def consumer_handler(websocket: WebSocketClientProtocol) -> None:
         config['mongodb']['database']][config['mongodb']['collection']]
     
     async for message in websocket:
-        message_json = format_message(json.loads(message))
-        # pprint(message_json)
+        try:
+            message_json = format_message(json.loads(message))
+            # pprint(message_json)
 
-        doc_id = trade_collection.insert_one(message_json).inserted_id
-        logger.debug('doc_id: {}'.format(doc_id))
+            doc_id = trade_collection.insert_one(message_json).inserted_id
+            logger.info('doc_id: {}'.format(doc_id))
+        except asyncio.CancelledError:
+            logger.debug('CancelledError raised.')
+            break
 
 
 async def consume(api_key: str, sub_msg: str) -> None:
@@ -97,8 +104,5 @@ if __name__ == '__main__':
             getattr(signal, signame),
             functools.partial(signal_exit, signame, loop))
     
-    try:
-        loop.run_until_complete(
-            consume(api_key=config['cryptowatch']['api'], sub_msg=subscription_message))
-    finally:
-        loop.close()
+    loop.run_until_complete(
+        consume(api_key=config['cryptowatch']['api'], sub_msg=subscription_message))
