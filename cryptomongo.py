@@ -43,15 +43,22 @@ def format_message(message):
         
         trades_converted = []
         for trade in message['marketUpdate']['tradesUpdate']['trades']:
-            trade_reformatted = dict(
-                amount=Decimal(trade['amountStr']),
-                # externalId=trade['externalId'],
-                orderSide=trade['orderSide'],
-                price=Decimal(trade['priceStr']),
-                timestamp=int(trade['timestamp']),
-                timestampNano=int(trade['timestampNano'])
-            )
-            trades_converted.append(trade_reformatted)
+            try:
+                trade_reformatted = dict(
+                    marketId=message['marketUpdate']['market']['marketId'],
+                    amount=Decimal(trade['amountStr']),
+                    # externalId=trade['externalId'],
+                    orderSide=trade['orderSide'],
+                    price=Decimal(trade['priceStr']),
+                    timestamp=int(trade['timestamp']),
+                    timestampNano=int(trade['timestampNano'])
+                )
+                trades_converted.append(trade_reformatted)
+            
+            except Exception as e:
+                # print(message['marketUpdate']['market']['marketId'])
+                # pprint(trade)
+                logger.exception('Exception while constructing trade info: {}'.format(e))
         
         message['marketUpdate']['tradesUpdate']['trades'] = trades_converted
     
@@ -83,6 +90,7 @@ async def consumer_handler(websocket: WebSocketClientProtocol) -> None:
 
             doc_id = trade_collection.insert_one(message_json).inserted_id
             logger.info('doc_id: {}'.format(doc_id))
+        
         except asyncio.CancelledError:
             logger.debug('CancelledError raised.')
             break
